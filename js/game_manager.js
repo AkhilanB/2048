@@ -8,6 +8,7 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
 
   this.inputManager.on("move", this.move.bind(this));
   this.inputManager.on("restart", this.restart.bind(this));
+  this.inputManager.on("othermove", this.othermove.bind(this));
   this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
 
   this.setup();
@@ -19,6 +20,17 @@ GameManager.prototype.restart = function () {
   this.actuator.continueGame(); // Clear the game won/lost message
   this.setup();
 };
+
+GameManager.prototype.othermove = function(pos) {
+  if (this.grid.cellOccupied(pos))
+    return;
+	this.prepareTiles();
+	this.grid.insertTile(new Tile(pos, pos.value));
+  if (!this.movesAvailable()) {
+    this.over = true; // Game over!
+  }
+  this.actuate();
+}
 
 // Keep playing after winning (allows going over 2048)
 GameManager.prototype.keepPlaying = function () {
@@ -54,8 +66,6 @@ GameManager.prototype.setup = function () {
     this.won         = false;
     this.keepPlaying = false;
 
-    // Add the initial tiles
-    this.addStartTiles();
   }
 
   // Update the actuator
@@ -184,7 +194,6 @@ GameManager.prototype.move = function (direction) {
   });
 
   if (moved) {
-    this.addRandomTile();
 
     if (!this.movesAvailable()) {
       this.over = true; // Game over!
