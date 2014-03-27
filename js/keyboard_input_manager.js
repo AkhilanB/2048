@@ -130,6 +130,20 @@ KeyboardInputManager.prototype.listen = function () {
       self.emit("move", absDx > absDy ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0));
     }
   });
+  var cells = document.getElementsByClassName("grid-cell");
+  for (var n=0; n<16; n++) {
+	var f=function(n, v) {
+	    return function(e) {
+		var x=n%4, y=(n/4)|0;
+		self.emit("othermove", {x:x, y:y, value: v});
+		e.preventDefault();
+		return false;
+	    };
+	};
+
+	cells[n].addEventListener("click", f(n,2), true);
+	cells[n].addEventListener("contextmenu", f(n,4), true);
+    }
 };
 
 KeyboardInputManager.prototype.restart = function (event) {
