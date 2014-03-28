@@ -52,7 +52,7 @@ h1.title {
   font-weight: bold;
   margin: 0;
   display: block;
-  text-align: center; }
+  float: left; }
 
 @-webkit-keyframes move-up {
   0% {
@@ -578,7 +578,7 @@ hr {
   cursor: pointer;
   display: block;
   text-align: center;
-  margin: 0 auto; }
+  float: left; }
 
 .game-explanation {
   margin-top: 50px; }
