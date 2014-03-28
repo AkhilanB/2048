@@ -559,8 +559,7 @@ hr {
 .above-game:after {
   content: "";
   display: block;
-  clear: both;
-  margin: 0 auto;}
+  clear: both;}
 
 .game-intro {
   float: left;
@@ -579,7 +578,7 @@ hr {
   cursor: pointer;
   display: block;
   text-align: center;
-  float: right; }
+  margin: 0 auto; }
 
 .game-explanation {
   margin-top: 50px; }
