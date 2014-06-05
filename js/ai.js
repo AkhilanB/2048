@@ -24,8 +24,8 @@ function Ai() {
         //              Naturally the modified state doesn't contain information about new tiles.
         //              Method returns true if you can move to that direction, false otherwise.
 
-        // sample AI:
-        if (this.foo == null) this.foo = 0;
-        return this.foo++ % 4;
+        int r;
+        r++;
+        return r%4;
     }
 }
