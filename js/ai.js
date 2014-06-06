@@ -20,7 +20,7 @@ function Ai() {
 				}
 			}
 		}
-		return sum / ct;
+		return sum;
 	}
     
 	
