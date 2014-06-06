@@ -9,14 +9,12 @@ function Ai() {
 	
 	var MAX_SEARCH_DEPTH = 6;
 	
-	function rateAverageValue(grid) {
+	function gridSum(grid) {
 		var sum = 0;
-		var ct  = 0;
 		for (var i = 0; i < 4; i++) {
 			for (var j = 0; j < 4; j++) {
 				if (grid.cells[i][j] != null) {
-					sum += 1;
-					ct++;
+					sum ++;
 				}
 			}
 		}
@@ -24,7 +22,7 @@ function Ai() {
 	}
     
 	
-	function rateGrid(grid) {
+	function gridSum(grid) {
 		return rateAverageValue(grid);
 	}
 	
