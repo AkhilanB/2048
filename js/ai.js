@@ -7,7 +7,7 @@ function Ai() {
         // This method is called when the game is reset.
     }
 	
-	var MAX_SEARCH_DEPTH = 3;
+	var MAX_SEARCH_DEPTH = 6;
 	
 	function rateAverageValue(grid) {
 		var sum = 0;
