@@ -1,108 +1,70 @@
+var log2 = Math.log2;
+if(!log2) {
+    log2 = function (x) { return Math.log(x) / Math.LN2; };
+}    
+ 
 function Ai() {
-    this.init = function() {
-        // This method is called when AI is first initialized.
-    }
-
-    this.restart = function() {
-        // This method is called when the game is reset.
-    }
-
-    this.step = function(grid) {
-        // This method is called on every update.
-        // Return one of these integers to move tiles on the grid:
-        // 0: up, 1: right, 2: down, 3: left
-
-        // Parameter grid contains current state of the game as Tile objects stored in grid.cells.
-        // Top left corner is at grid.cells[0][0], top right: grid.cells[3][0], bottom left: grid.cells[0][3], bottom right: grid.cells[3][3].
-        // Tile objects have .value property which contains the value of the tile. If top left corner has tile with 2, grid.cells[0][0].value == 2.
-        // Array will contain null if there is no tile in the slot (e.g. grid.cells[0][3] == null if bottom left corner doesn't have a tile).
-
-        // Grid has 2 useful helper methods:
-        // .copy()    - creates a copy of the grid and returns it.
-        // .move(dir) - can be used to determine what is the next state of the grid going to be if moved to that direction.
-        //              This changes the state of the grid object, so you should probably copy() the grid before using this.
-        //              Naturally the modified state doesn't contain information about new tiles.
-        //              Method returns true if you can move to that direction, false otherwise.
-
-        // sample AI:
-        var allowedDirections = [];
-
-        var up = grid.copy();
-        allowedDirections[0] = up.move(0);
-
-        var right = grid.copy();
-        allowedDirections[1] = right.move(1);
-
-        var down = grid.copy();
-        allowedDirections[2] = down.move(2);
-
-        var left = grid.copy();
-        allowedDirections[3] = left.move(3);
-
-        var grids = [up, right, down, left];
-        var strategies = [this.sum, this.countFreeCells];
-
-        var rankedCandidates = [];
-        for (var i = 0; i < allowedDirections.length; i++) {
-            if (allowedDirections[i]) {
-                rankedCandidates.push(i);
-            }
-        }
-
-        for (var s = 0; s < strategies.length; s++) {
-            rankedCandidates = this.rank(grids, rankedCandidates, strategies[s]);
-        }
-             
-        var decision = rankedCandidates[0];
-        return decision;
-    }
-
-    this.rank = function (grids, candidates, strategy) {
-        var appliedGrids = [];
-        for (var i = 0; i < grids.length; i++) {
-            appliedGrids.push(strategy(grids[i]));
-        }
-
-        var bestValue = 0;
-        var bestCandidates = 0;
-
-        for (var i = 0; i < candidates.length; i++) {
-            var d = candidates[i];
-
-            if (appliedGrids[d] > bestValue) {
-                bestValue = appliedGrids[d];
-                bestCandidates = [d];
-            }
-            else if (appliedGrids[d] == bestValue) {
-                bestCandidates.push(d);
-            }
-        }
-
-        return bestCandidates;
-    }
-
-    this.sum = function (grid) {
-        var gridSum = 0;
-        for (var x = 0; x < grid.size; x++) {
-            for (var y = 0; y < grid.size; y++) {
-                var cell = grid.cells[x][y];
-                if (cell != null)
-                {
-                    var val = grid.cells[x][y].value;
-                    gridSum += val * val;
+    var score = function (grid, previous) {
+        var total = 0, count = 0, ptotal = 0, pcount = 0;
+        grid.eachCell(function (x, y, tile) {
+            if (tile) { total += (log2(tile.value)-1)*tile.value; count += 1; }
+        });
+    //    previous.eachCell(function (x, y, tile) {
+  //          if (tile) { ptotal += (log2(tile.value)-1)*tile.value; pcount += 1; }
+//        });
+        
+        return total / count;
+    };
+    
+    var multipliers = [1,1,1,1];//set one of these to 0 to discourage move in one direction
+    
+    //returns the best move according to the score function
+    var mover = function (grid, depth) {
+        var i, sc, b, copy;
+        for (i = 0; i < 4; i++) { 
+            copy = grid.copy();
+            if (copy.move(i)) {
+                copy.insertTile(new Tile(copy.randomAvailableCell(), Math.random() < 0.9 ? 2 : 4));
+                if (!depth) { sc = [i, multipliers[i]*score(copy, grid)]; }
+                else { 
+                    var temp = mover(copy, depth - 1);
+                    if (temp) { sc = [i, multipliers[i]*temp[1]]; } else { sc = [i, multipliers[i]*score(copy, grid)]; }
+                }
+                if (b == null || b[1] < sc[1]) {
+                    b = sc;
                 }
             }
         }
-        return gridSum;
-    }
-
-    this.countFreeCells = function (grid) {
-        var freeCells = 0;
-        for (var x = 0; x < grid.size; x++) {
-            for (var y = 0; y < grid.size; y++) {
-                freeCells += grid.cells[x][y] == null;
+        return b;
+    };
+    
+    this.init = function() { };
+    this.restart = function() { };
+    
+    this.step = function(grid) {
+        var list = [], moves = [null,null,null,null], i, item, j, b, ms, bs;
+        for (i = 0; i < 6; i++) {//run several simulations
+            item = mover(grid, 2);
+            if(item == null) { return null; }
+            j = item[0];
+            if (moves[j] == null) {
+                moves[j] = [item[1], 1];
+            } else {
+                moves[j][0] += item[1];
+                moves[j][1]++;
+                if (moves[j][1] > 3) { return j; }
             }
         }
-        return freeCells;
+        for (j = 0; j < 4; j++) {
+            if (moves[j] != null) {
+                ms = moves[j][0]/moves[j][1];
+                if(!bs || bs < ms) {
+                    bs = ms;
+                    b = j;
+                }
+            }
+        }
+    
+        return b;
     }
 }
