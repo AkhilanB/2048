@@ -1,70 +1,70 @@
-var log2 = Math.log2;
-if(!log2) {
-    log2 = function (x) { return Math.log(x) / Math.LN2; };
-}    
- 
 function Ai() {
-    var score = function (grid, previous) {
-        var total = 0, count = 0, ptotal = 0, pcount = 0;
-        grid.eachCell(function (x, y, tile) {
-            if (tile) { total += (log2(tile.value)-1)*tile.value; count += 1; }
-        });
-    //    previous.eachCell(function (x, y, tile) {
-  //          if (tile) { ptotal += (log2(tile.value)-1)*tile.value; pcount += 1; }
-//        });
-        
-        return total / count;
-    };
+    this.init = function() {
+        // This method is called when AI is first initialized.
+    }
+
+    this.restart = function() {
+        // This method is called when the game is reset.
+    }
+	
+	var MAX_SEARCH_DEPTH = 3;
+	
+	function rateAverageValue(grid) {
+		var sum = 0;
+		var ct  = 0;
+		for (var i = 0; i < 4; i++) {
+			for (var j = 0; j < 4; j++) {
+				if (grid.cells[i][j] != null) {
+					sum += 1;
+					ct++;
+				}
+			}
+		}
+		return sum / ct;
+	}
     
-    var multipliers = [1,1,1,1];//set one of these to 0 to discourage move in one direction
-    
-    //returns the best move according to the score function
-    var mover = function (grid, depth) {
-        var i, sc, b, copy;
-        for (i = 0; i < 4; i++) { 
-            copy = grid.copy();
-            if (copy.move(i)) {
-                copy.insertTile(new Tile(copy.randomAvailableCell(), Math.random() < 0.9 ? 2 : 4));
-                if (!depth) { sc = [i, multipliers[i]*score(copy, grid)]; }
-                else { 
-                    var temp = mover(copy, depth - 1);
-                    if (temp) { sc = [i, multipliers[i]*temp[1]]; } else { sc = [i, multipliers[i]*score(copy, grid)]; }
+	
+	function rateGrid(grid) {
+		return rateAverageValue(grid);
+	}
+	
+	function dfs(grid, depth) {
+		var ret = {dir: 0, avgRating: -1000000};
+		if (depth >= MAX_SEARCH_DEPTH) {
+			ret.avgRating = rateGrid(grid);
+			return ret;
+		}
+		
+		for (var dir = 0; dir < 4; dir++) {
+			var grid2 = grid.copy();
+			if (grid2.move(dir)) {
+				var moveRating = 0.00001;
+                var cells = grid2.availableCells();
+                if (cells.length == 0) continue;
+                for (var i = 0; i < cells.length; i++) {
+                    var tile = new Tile(cells[i],2);
+                    grid2.insertTile(tile);
+                    moveRating += dfs(grid2, depth+1).avgRating;
+				    grid2.removeTile(tile);
                 }
-                if (b == null || b[1] < sc[1]) {
-                    b = sc;
-                }
-            }
-        }
-        return b;
-    };
-    
-    this.init = function() { };
-    this.restart = function() { };
-    
+                
+                //console.log(dir, moveRating, cells.length, moveRating / cells.length)
+                
+                moveRating /= cells.length;
+                
+                //console.log(dir, moveRating);
+                
+                if (moveRating > ret.avgRating) {
+					ret.avgRating = moveRating;
+					ret.dir = dir;
+				}
+			}
+		}
+        //console.log(ret.dir);
+		return ret;
+	}
+	
     this.step = function(grid) {
-        var list = [], moves = [null,null,null,null], i, item, j, b, ms, bs;
-        for (i = 0; i < 6; i++) {//run several simulations
-            item = mover(grid, 2);
-            if(item == null) { return null; }
-            j = item[0];
-            if (moves[j] == null) {
-                moves[j] = [item[1], 1];
-            } else {
-                moves[j][0] += item[1];
-                moves[j][1]++;
-                if (moves[j][1] > 3) { return j; }
-            }
-        }
-        for (j = 0; j < 4; j++) {
-            if (moves[j] != null) {
-                ms = moves[j][0]/moves[j][1];
-                if(!bs || bs < ms) {
-                    bs = ms;
-                    b = j;
-                }
-            }
-        }
-    
-        return b;
+		return dfs(grid, 0).dir;
     }
 }
