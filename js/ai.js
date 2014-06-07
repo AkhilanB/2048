@@ -18,7 +18,7 @@ function Ai() {
 				}
 			}
 		}
-		return sum;
+		return 1;
 	}
     
 	
